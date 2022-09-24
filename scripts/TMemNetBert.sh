@@ -11,7 +11,6 @@ cd $SLURM_SUBMIT_DIR
 python train.py\
     --total_gpu_num=2\
     --model_type='TMemNetBert'\
-    --use_cs_ids=false\
     --knowledge_alpha=0.25\
     --output_dir='output/TMemNetBert_wow_v0.0'\
     --num_train_epochs=20\

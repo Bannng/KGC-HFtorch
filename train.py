@@ -37,7 +37,7 @@ def get_args():
                                                            "SKT",
                                                            ],
                                                         default="TMemNetBert")
-    parser.add_argument("--use_cs_ids", type=bool, default=False)
+    parser.add_argument("--use_cs_ids", action='store_true') # becareful with this
     parser.add_argument("--knowledge_alpha", type=float, default=0.25)
 
     # arguments for training
