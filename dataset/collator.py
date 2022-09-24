@@ -127,15 +127,31 @@ class WowCollator:
         #     'labels' : labels.masked_fill(labels==self.tokenizer.pad_token_id, -100).reshape(-1, batch_input_dict['response'].shape[-1]-1)
         # }
 
-        c_bs, c_el, max_context_length = input_ids.shape
-        r_bs, r_el, max_dec_input_length = decoder_input_ids.shape
+        # c_bs, c_el, max_context_length = input_ids.shape
+        # r_bs, r_el, max_dec_input_length = decoder_input_ids.shape
+
+        # 이렇게 하는 것은 dataparallel 에서 데이터가 잘못 쪼개지는 상황을 만든다 (특히 배치가 홀수일 때) -> 이렇게 하면 안됨
+        # output_dict = {
+        #     'input_ids':input_ids.reshape(-1, max_context_length),
+        #     'attention_mask':attention_mask.reshape(-1, max_context_length),
+        #     'decoder_input_ids':decoder_input_ids.reshape(-1, max_dec_input_length),
+        #     'decoder_attention_mask':decoder_attention_mask.reshape(-1, max_dec_input_length),
+        #     'labels':labels.reshape(-1, max_dec_input_length),
+        #     'knowledge_input_ids':knowledge_input_ids,
+        #     'knowledge_attention_mask':knowledge_attention_mask,
+        #     'response':response,
+        #     'context_length':context_length,
+        #     'response_length':response_length,
+        #     'num_knowledge_sentences':num_knowledge_sentences,
+        #     'knowledge_sentences_length':knowledge_sentences_length,
+        # }
 
         output_dict = {
-            'input_ids':input_ids.reshape(-1, max_context_length),
-            'attention_mask':attention_mask.reshape(-1, max_context_length),
-            'decoder_input_ids':decoder_input_ids.reshape(-1, max_dec_input_length),
-            'decoder_attention_mask':decoder_attention_mask.reshape(-1, max_dec_input_length),
-            'labels':labels.reshape(-1, max_dec_input_length),
+            'input_ids':input_ids,
+            'attention_mask':attention_mask,
+            'decoder_input_ids':decoder_input_ids,
+            'decoder_attention_mask':decoder_attention_mask,
+            'labels':labels,
             'knowledge_input_ids':knowledge_input_ids,
             'knowledge_attention_mask':knowledge_attention_mask,
             'response':response,

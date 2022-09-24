@@ -1,10 +1,11 @@
 from typing import Dict, Optional, List, Tuple, Union
 import torch
 from transformers import BertTokenizer, BertModel, EncoderDecoderModel, BertConfig, EncoderDecoderConfig
+from modules.knowledge_encdec_model import KnowledgeEncoderDecoderModel
 
 
 # Transformer without knowledge selection
-class Transformer(EncoderDecoderModel):
+class Transformer(KnowledgeEncoderDecoderModel):
     def __init__(self,
         encoder_config='bert-base-uncased'
     ):
@@ -74,6 +75,23 @@ class Transformer(EncoderDecoderModel):
         return_dict: Optional[bool] = None,
         **kwargs,
     ):  
+        #######################################################################################
+        # flatten episode batch
+        flatten_main_batch = self.flat_episode_batch_data(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            decoder_input_ids=decoder_input_ids,
+            decoder_attention_mask=decoder_attention_mask,
+            labels=labels
+        )
+
+        input_ids = flatten_main_batch['input_ids']
+        attention_mask = flatten_main_batch['attention_mask']
+        decoder_input_ids = flatten_main_batch['decoder_input_ids']
+        decoder_attention_mask = flatten_main_batch['decoder_attention_mask']
+        labels = flatten_main_batch['labels']
+        #######################################################################################
+
         filtered_kwargs = kwargs
         if self.ignore_kwargs_key is not None:
             filtered_kwargs = {argument: value for argument, value in kwargs.items()

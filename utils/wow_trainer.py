@@ -342,6 +342,13 @@ class WoWTrainer(Trainer):
 
         if has_labels:
             labels = inputs["labels"]
+
+            ########################################################################################
+            # flatten label for gathering
+            rbs, rel, r_seq_len = labels.shape
+            labels = labels.reshape(-1, r_seq_len)
+            ########################################################################################
+
             if gen_kwargs.get("max_length") is not None and labels.shape[-1] < gen_kwargs["max_length"]:
                 labels = self._pad_tensors_to_max_len(labels, gen_kwargs["max_length"])
             elif gen_kwargs.get("max_new_tokens") is not None and labels.shape[-1] < (

@@ -1,3 +1,4 @@
+from json import decoder
 from typing import Dict, Optional, List, Tuple, Union
 import torch as torch
 import torch.nn as nn
@@ -7,6 +8,7 @@ from transformers import BertTokenizer, BertModel, EncoderDecoderModel, BertConf
 from transformers.modeling_outputs import BaseModelOutput
 
 from modules.universal_sentence_embedding import universal_sentence_embedding
+from modules.knowledge_encdec_model import KnowledgeEncoderDecoderModel
 from utils.model_outputs import AdditionalSeq2SeqLMOutputWithKnow, AdditionalKnowledgeModelOutput
 from utils.utils import neginf, shift_tokens_right
 
@@ -14,7 +16,7 @@ from utils.utils import neginf, shift_tokens_right
 
 
 # TransformerMemoryNetwork with Bert-base-uncased encoder
-class TMemNetBert(EncoderDecoderModel):
+class TMemNetBert(KnowledgeEncoderDecoderModel):
     def __init__(self,
         encoder_config='bert-base-uncased',
         use_cs_ids=False,
@@ -81,7 +83,24 @@ class TMemNetBert(EncoderDecoderModel):
         num_knowledge_sentences = None,
         knowledge_sentences_length = None,
         **kwargs,
-    ):
+    ):  
+        #######################################################################################
+        # flatten episode batch
+        flatten_main_batch = self.flat_episode_batch_data(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            decoder_input_ids=decoder_input_ids,
+            decoder_attention_mask=decoder_attention_mask,
+            labels=labels
+        )
+
+        input_ids = flatten_main_batch['input_ids']
+        attention_mask = flatten_main_batch['attention_mask']
+        decoder_input_ids = flatten_main_batch['decoder_input_ids']
+        decoder_attention_mask = flatten_main_batch['decoder_attention_mask']
+        labels = flatten_main_batch['labels']
+        #######################################################################################
+
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         kwargs_encoder = {argument: value for argument, value in kwargs.items() if not argument.startswith("decoder_")}
@@ -292,6 +311,17 @@ class ContextKnowledgeEncoder(BertModel):
         num_knowledge_sentences = None,
         knowledge_sentences_length = None,
     ):
+        #######################################################################################
+        # flatten episode batch
+        if input_ids is not None and len(input_ids.shape) > 2:
+            c_bs, c_el, max_context_length = input_ids.shape
+            input_ids = input_ids.reshape(-1, max_context_length)
+
+        if attention_mask is not None and len(attention_mask.shape) > 2:
+            c_bs, c_el, max_context_length = attention_mask.shape
+            attention_mask = attention_mask.reshape(-1, max_context_length)
+        #######################################################################################
+
         # original arguments shape are flatten, but added arguments are not!
         k_bs, k_el, nk, kl = knowledge_input_ids.shape
         knowledge_input_ids = knowledge_input_ids.reshape(-1, kl)
