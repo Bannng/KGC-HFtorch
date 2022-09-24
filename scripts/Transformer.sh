@@ -15,10 +15,10 @@ python train.py\
     --output_dir='output/Transformer_wow_v0.0'\
     --num_train_epochs=20\
     --per_device_train_batch_size=1\
-    --per_device_eval_batch_size=4\
+    --per_device_eval_batch_size=1\
     --gradient_accumulation_steps=4\
     --learning_rate=2e-5\
-    --logging_num_per_epoch=50\
+    --logging_num_per_epoch=20\
     --save_num_per_epoch=1\
     --dataloader_num_workers=3\
     --disable_tqdm
