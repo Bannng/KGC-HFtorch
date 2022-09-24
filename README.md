@@ -10,7 +10,7 @@
 
 
 ### Batch size tip
-- per_device_train_batch_size : 2
+- per_device_train_batch_size : 1
 - per_device_eval_batch_size : 4
 - grad_accumulation_steps : 4
 * which is available for 2080ti (nearly 110000MB)
