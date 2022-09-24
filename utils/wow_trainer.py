@@ -326,7 +326,7 @@ class WoWTrainer(Trainer):
                             loss_container.append(add_loss.mean().detach())
                         loss = torch.stack(loss_container, axis=0)
                     else:
-                        loss = outputs.loss
+                        loss = outputs.loss.mean().detach()
 
                     if 'correct_know_nums' in outputs.keys():
                         correct_know_num = outputs.correct_know_nums.sum()
