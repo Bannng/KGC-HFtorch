@@ -46,7 +46,7 @@ def get_args():
     # arguments for training
     parser.add_argument("--output_dir", type=str, default='/home/byeongjoo/KGC/SequentialKnowledgeTransformer-torch/output/wowtest5')
     parser.add_argument("--num_train_epochs", type=int, default=20)
-    parser.add_argument("--per_device_train_batch_size", type=int, default=2)
+    parser.add_argument("--per_device_train_batch_size", type=int, default=1)
     parser.add_argument("--per_device_eval_batch_size", type=int, default=1)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=4)
     
@@ -57,7 +57,7 @@ def get_args():
     parser.add_argument("--logging_num_per_epoch", type=int, default=20)
     parser.add_argument("--save_num_per_epoch", type=int, default=1)
     parser.add_argument("--disable_tqdm", action='store_true')
-    parser.add_argument("--dataloader_num_workers", type=int, default=0)
+    parser.add_argument("--dataloader_num_workers", type=int, default=3)
     
     # for resume training
     parser.add_argument("--ignore_data_skip", action='store_true')
