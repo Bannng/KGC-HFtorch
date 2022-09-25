@@ -8,6 +8,7 @@ import argparse
 
 from models.Transformer import Transformer
 from models.TMemNet import TMemNet, TMemNetBert
+from models.TitleNet import TitleNet
 
 
 # import os
@@ -35,15 +36,17 @@ def get_args():
                                                            "TMemNetBert",
                                                            "PostKSBert",
                                                            "SKT",
+                                                           "TitleNet"
                                                            ],
                                                         default="TMemNetBert")
     parser.add_argument("--use_cs_ids", action='store_true') # becareful with this
     parser.add_argument("--knowledge_alpha", type=float, default=0.25)
+    parser.add_argument("--max_title_num", type=int, default=5)
 
     # arguments for training
     parser.add_argument("--output_dir", type=str, default='/home/byeongjoo/KGC/SequentialKnowledgeTransformer-torch/output/wowtest5')
     parser.add_argument("--num_train_epochs", type=int, default=20)
-    parser.add_argument("--per_device_train_batch_size", type=int, default=1)
+    parser.add_argument("--per_device_train_batch_size", type=int, default=2)
     parser.add_argument("--per_device_eval_batch_size", type=int, default=1)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=4)
     
@@ -54,7 +57,7 @@ def get_args():
     parser.add_argument("--logging_num_per_epoch", type=int, default=20)
     parser.add_argument("--save_num_per_epoch", type=int, default=1)
     parser.add_argument("--disable_tqdm", action='store_true')
-    parser.add_argument("--dataloader_num_workers", type=int, default=3)
+    parser.add_argument("--dataloader_num_workers", type=int, default=0)
     
     # for resume training
     parser.add_argument("--ignore_data_skip", action='store_true')
@@ -83,6 +86,15 @@ def select_model(args):
             knowledge_alpha=args.knowledge_alpha,
         )
 
+    elif model_type == "TitleNet":
+        model = TitleNet(
+            use_cs_ids=args.use_cs_ids,
+            knowledge_alpha=args.knowledge_alpha,
+            max_title_num=args.max_title_num,
+        )
+
+
+
     elif model_type == "PostKSBert":
         raise ValueError("choose your model type properly")
 
@@ -105,6 +117,7 @@ def train(args):
 
     # set tokenizer, model, collator
     model = select_model(args)
+    # model = TitleNet()
     
     if args.local_rank == -1 or args.local_rank == 0:
         print(f'Model name : {type(model)}')
