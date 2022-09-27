@@ -51,6 +51,7 @@ def get_args():
     parser.add_argument("--gradient_accumulation_steps", type=int, default=4)
     
     parser.add_argument("--learning_rate", type=float, default=2e-5)
+    parser.add_argument("--lr_scheduler_type", type=str, default='constant')
     parser.add_argument("--weight_decay", type=float, default=0.0) # set this 0.0 for Adam Optimizer
     parser.add_argument("--warmup_ratio", type=float, default=0.0)
     parser.add_argument("--max_grad_norm", type=float, default=0.4)
@@ -216,6 +217,7 @@ def train(args):
         predict_with_generate=True,
         generation_max_length=gen_kwargs['max_length'],
         generation_num_beams=gen_kwargs['num_beams'],
+        lr_scheduler_type=args.lr_scheduler_type,
     )
 
     # set trainer
