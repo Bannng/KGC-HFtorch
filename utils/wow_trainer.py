@@ -457,7 +457,7 @@ class WoWTrainer(Trainer):
         observed_num_examples = 0
         # Main evaluation loop
         for step, inputs in enumerate(dataloader):
-            # if step == 2: break ######## mask it later
+            if step == 2: break ######## mask it later
             # Update the observed num examples
             observed_batch_size = find_batch_size(inputs)
             if observed_batch_size is not None:

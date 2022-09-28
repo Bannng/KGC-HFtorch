@@ -9,11 +9,12 @@ import argparse
 from models.Transformer import Transformer
 from models.TMemNet import TMemNet, TMemNetBert
 from models.TitleNet import TitleNet
+from models.MemBoB import MemNetBoB, BoBTMemNetBert
 
 
-# import os
-# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"]="0"
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 
 def get_args():
@@ -56,9 +57,9 @@ def get_args():
     parser.add_argument("--warmup_ratio", type=float, default=0.0)
     parser.add_argument("--max_grad_norm", type=float, default=0.4)
     parser.add_argument("--logging_num_per_epoch", type=int, default=20)
-    parser.add_argument("--save_num_per_epoch", type=int, default=1)
+    parser.add_argument("--save_num_per_epoch", type=int, default=10000000)
     parser.add_argument("--disable_tqdm", action='store_true')
-    parser.add_argument("--dataloader_num_workers", type=int, default=3)
+    parser.add_argument("--dataloader_num_workers", type=int, default=0)
     
     # for resume training
     parser.add_argument("--ignore_data_skip", action='store_true')
@@ -94,6 +95,13 @@ def select_model(args):
             max_title_num=args.max_title_num,
         )
 
+    elif model_type == "MemBoB":
+        model = MemNetBoB(
+            use_cs_ids=args.use_cs_ids,
+            knowledge_alpha=args.knowledge_alpha,
+            max_title_num=args.max_title_num,
+        )
+
 
 
     elif model_type == "PostKSBert":
@@ -117,8 +125,11 @@ def train(args):
         torch.cuda.set_device(args.local_rank)
 
     # set tokenizer, model, collator
-    model = select_model(args)
-    # model = TitleNet()
+    # model = select_model(args)
+    # model = MemNetBoB(knowledge_mode="2")
+    model = BoBTMemNetBert(knowledge_mode="context_only", concat_query=False) # context_only, argmax, pool
+    # 일단 argmax는 나중에 실험
+
     
     if args.local_rank == -1 or args.local_rank == 0:
         print(f'Model name : {type(model)}')
