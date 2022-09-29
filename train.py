@@ -13,9 +13,9 @@ from models.MemBoB import MemNetBoB, BoBTMemNetBert
 from models.MemBoB2 import BoBTMemNetBert2
 
 
-# import os
-# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"]="0"
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 
 def get_args():

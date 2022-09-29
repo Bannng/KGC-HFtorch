@@ -123,7 +123,7 @@ class MyBertLMHeadModel(BertPreTrainedModel):
 
         # inputs_embeds = self.bert.embeddings.word_embeddings(d_input_ids)
         # gen_hiddens = [inputs_embeds]
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
         while cur_len <= gen_until_length:
             outputs = self.bert(
                 d_input_ids,
@@ -149,7 +149,7 @@ class MyBertLMHeadModel(BertPreTrainedModel):
             gen_hiddens.append(inputs_embeds)
             # inputs_embeds = torch.concat(gen_hiddens, dim=1)
             cur_len += 1
-        # torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
 
         # sequence_output = outputs[0]
         sequence_output = torch.concat(gen_hiddens, dim=1)
