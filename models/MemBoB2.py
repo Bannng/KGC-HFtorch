@@ -12,6 +12,8 @@ from modules.knowledge_encdec_model import KnowledgeEncoderDecoderModel
 from utils.model_outputs import AdditionalSeq2SeqLMOutputWithKnow, AdditionalKnowledgeModelOutput
 from utils.utils import neginf, shift_tokens_right
 
+from modules.bert import MyBertLMHeadModel
+
 
 
 
@@ -226,7 +228,7 @@ class MemNetBoB(KnowledgeEncoderDecoderModel):
 
 
 # TransformerMemoryNetwork with Bert-base-uncased encoder
-class BoBTMemNetBert(KnowledgeEncoderDecoderModel):
+class BoBTMemNetBert2(KnowledgeEncoderDecoderModel):
     def __init__(self,
         encoder_config='bert-base-uncased',
         use_cs_ids=False,
@@ -261,8 +263,9 @@ class BoBTMemNetBert(KnowledgeEncoderDecoderModel):
             'max_length':51,
         }
         self.decoder_config_ = BertConfig(**default_decoder_config)
+        my_decoder = MyBertLMHeadModel(self.decoder_config_)
         self.encoder_decoder_config = EncoderDecoderConfig.from_encoder_decoder_configs(encoder_config=self.encoder_config_, decoder_config=self.decoder_config_)
-        super().__init__(config=self.encoder_decoder_config, encoder=knowledge_encoder)
+        super().__init__(config=self.encoder_decoder_config, encoder=knowledge_encoder, decoder=my_decoder)
 
         self.use_cs_ids = use_cs_ids
         self.knowledge_alpha = knowledge_alpha
@@ -401,40 +404,24 @@ class BoBTMemNetBert(KnowledgeEncoderDecoderModel):
 
         #############################################################################################
         p_knowledge_attention = None
-        if generation_mode is False:
-            # if labels is None and past_key_values is None:
-            if not self.training:
-                generated = self.generate(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    encoder_outputs=encoder_outputs,
-                    knowledge_input_ids=knowledge_input_ids,
-                    knowledge_attention_mask=knowledge_attention_mask,
-                    response=response,
-                    context_length=context_length,
-                    response_length=response_length,
-                    num_knowledge_sentences=num_knowledge_sentences,
-                    knowledge_sentences_length=knowledge_sentences_length,
-                    output_hidden_states=True,
-                    return_dict_in_generate=True,
-                    generation_mode=True,
-                )
-                decoder_attention_mask = (generated.sequences != self.tokenizer.pad_token_id).type(torch.DoubleTensor).to(generated.sequences.device)[:,1:]
-                decoder_output_sequence = generated.decoder_hidden_states[-1][-1]
-            else:        
-                decoder_output_sequence = decoder_outputs.hidden_states[-1]
-            p_encoder_outputs, p_attention_mask, p_knowledge_attention = self.knowledge_selection_decoder(
-                                                                    decoder_output_sequence,
-                                                                    decoder_attention_mask,
-                                                                    knowledge_pooled,
-                                                                    knowledge_encoder_outputs,
-                                                                    context_encoder_output,
-                                                                    context_attention_mask,
-                                                                    knowledge_attention_mask,
-                                                                    knowledge_sentences_length,
-                                                                    knowledge_input_ids.shape,
-                                                                    self.use_cs_ids,
-                                                                    )
+        # decoder_output_sequence = decoder_outputs.hidden_states[-1]
+        decoder_output_sequence = decoder_outputs.hidden_states
+        if not self.training:
+            gen_result = torch.argmax(decoder_outputs.logits, dim=-1)
+            decoder_attention_mask = (gen_result != self.tokenizer.pad_token_id).type(torch.DoubleTensor).to(decoder_output_sequence.device)
+
+        p_encoder_outputs, p_attention_mask, p_knowledge_attention = self.knowledge_selection_decoder(
+                                                                decoder_output_sequence,
+                                                                decoder_attention_mask,
+                                                                knowledge_pooled,
+                                                                knowledge_encoder_outputs,
+                                                                context_encoder_output,
+                                                                context_attention_mask,
+                                                                knowledge_attention_mask,
+                                                                knowledge_sentences_length,
+                                                                knowledge_input_ids.shape,
+                                                                self.use_cs_ids,
+                                                                )
         # for knowledge loss
         if self.knowledge_alpha != 0.0:
             p_know_loss, p_correct_know_num = self.get_p_knowledge_loss(
@@ -580,29 +567,41 @@ class BoBTMemNetBert(KnowledgeEncoderDecoderModel):
         return None
 
 
-    def prepare_inputs_for_generation(
-        self, input_ids, past=None, attention_mask=None, use_cache=None, encoder_outputs=None, **kwargs
-    ):
-        decoder_inputs = self.decoder.prepare_inputs_for_generation(input_ids, past=past)
-        decoder_attention_mask = decoder_inputs["attention_mask"] if "attention_mask" in decoder_inputs else None
-        input_dict = {
-            "attention_mask": attention_mask,
-            "decoder_attention_mask": decoder_attention_mask,
-            "decoder_input_ids": decoder_inputs["input_ids"],
-            "encoder_outputs": encoder_outputs,
-            "past_key_values": decoder_inputs["past_key_values"],
-            "use_cache": False,
-            # "use_cache": True,
-            "knowledge_input_ids":kwargs['knowledge_input_ids'],
-            "knowledge_attention_mask":kwargs['knowledge_attention_mask'],
-            "response":kwargs['response'],
-            "context_length":kwargs['context_length'],
-            "response_length":kwargs['response_length'],
-            "num_knowledge_sentences":kwargs['num_knowledge_sentences'],
-            "knowledge_sentences_length":kwargs['knowledge_sentences_length'],
-            "generation_mode":True,
-        }
-        return input_dict
+
+    def generate(self, **kwargs):
+        kwargs.pop('max_length')
+        kwargs.pop('do_sample')
+        kwargs.pop('num_beams')
+        kwargs.pop('no_repeat_ngram_size')
+        kwargs.pop('synced_gpus')
+        kwargs['decoder_input_ids'] = kwargs['input_ids']
+        outputs = self(**kwargs)
+        gen_result = torch.argmax(outputs.logits, dim=-1)
+        return gen_result
+
+
+    # def prepare_inputs_for_generation(
+    #     self, input_ids, past=None, attention_mask=None, use_cache=None, encoder_outputs=None, **kwargs
+    # ):
+    #     decoder_inputs = self.decoder.prepare_inputs_for_generation(input_ids, past=past)
+    #     decoder_attention_mask = decoder_inputs["attention_mask"] if "attention_mask" in decoder_inputs else None
+    #     input_dict = {
+    #         "attention_mask": attention_mask,
+    #         "decoder_attention_mask": decoder_attention_mask,
+    #         "decoder_input_ids": decoder_inputs["input_ids"],
+    #         "encoder_outputs": encoder_outputs,
+    #         "past_key_values": decoder_inputs["past_key_values"],
+    #         "use_cache": False,
+    #         "knowledge_input_ids":kwargs['knowledge_input_ids'],
+    #         "knowledge_attention_mask":kwargs['knowledge_attention_mask'],
+    #         "response":kwargs['response'],
+    #         "context_length":kwargs['context_length'],
+    #         "response_length":kwargs['response_length'],
+    #         "num_knowledge_sentences":kwargs['num_knowledge_sentences'],
+    #         "knowledge_sentences_length":kwargs['knowledge_sentences_length'],
+    #         "generation_mode":True,
+    #     }
+    #     return input_dict
 
 
 

@@ -10,6 +10,7 @@ from models.Transformer import Transformer
 from models.TMemNet import TMemNet, TMemNetBert
 from models.TitleNet import TitleNet
 from models.MemBoB import MemNetBoB, BoBTMemNetBert
+from models.MemBoB2 import BoBTMemNetBert2
 
 
 import os
@@ -57,7 +58,7 @@ def get_args():
     parser.add_argument("--warmup_ratio", type=float, default=0.0)
     parser.add_argument("--max_grad_norm", type=float, default=0.4)
     parser.add_argument("--logging_num_per_epoch", type=int, default=20)
-    parser.add_argument("--save_num_per_epoch", type=int, default=10000000)
+    parser.add_argument("--save_num_per_epoch", type=int, default=100000)
     parser.add_argument("--disable_tqdm", action='store_true')
     parser.add_argument("--dataloader_num_workers", type=int, default=0)
     
@@ -127,7 +128,8 @@ def train(args):
     # set tokenizer, model, collator
     # model = select_model(args)
     # model = MemNetBoB(knowledge_mode="2")
-    model = BoBTMemNetBert(knowledge_mode="context_only", concat_query=False) # context_only, argmax, pool
+    # model = BoBTMemNetBert(knowledge_mode="context_only", concat_query=False) # context_only, argmax, pool
+    model = BoBTMemNetBert2(knowledge_mode="context_only", concat_query=False) # context_only, argmax, pool
     # 일단 argmax는 나중에 실험
 
     
