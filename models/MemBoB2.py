@@ -399,6 +399,7 @@ class BoBTMemNetBert2(KnowledgeEncoderDecoderModel):
         if labels is not None:
             # warnings.warn(DEPRECATION_WARNING, FutureWarning)
             logits = decoder_outputs.logits if return_dict else decoder_outputs[0]
+            logits = logits[:, :labels.shape[-1], :]
             loss_fct = nn.CrossEntropyLoss(ignore_index=-100)
             loss = loss_fct(logits.reshape(-1, self.decoder.config.vocab_size), labels.view(-1))
 
@@ -408,7 +409,12 @@ class BoBTMemNetBert2(KnowledgeEncoderDecoderModel):
         decoder_output_sequence = decoder_outputs.hidden_states
         if not self.training:
             gen_result = torch.argmax(decoder_outputs.logits, dim=-1)
-            decoder_attention_mask = (gen_result != self.tokenizer.pad_token_id).type(torch.DoubleTensor).to(decoder_output_sequence.device)
+            # make decoder attention mask based on eos_token_id
+            eos_tokens = [np.where(g==self.tokenizer.sep_token_id)[0] for g in gen_result.cpu().numpy()]
+            eos_tokens = [et.item() if len(et) != 0 else gen_result.shape[-1] for et in eos_tokens]
+            eos_tokens = torch.tensor(eos_tokens).unsqueeze(-1).repeat(1, gen_result.shape[-1])
+            range_tokens = torch.arange(gen_result.shape[-1]).repeat(gen_result.shape[0], 1)
+            decoder_attention_mask = (range_tokens < eos_tokens).type(torch.DoubleTensor).to(decoder_output_sequence.device)
 
         p_encoder_outputs, p_attention_mask, p_knowledge_attention = self.knowledge_selection_decoder(
                                                                 decoder_output_sequence,
@@ -575,7 +581,8 @@ class BoBTMemNetBert2(KnowledgeEncoderDecoderModel):
         kwargs.pop('no_repeat_ngram_size')
         kwargs.pop('synced_gpus')
         kwargs['decoder_input_ids'] = kwargs['input_ids']
-        outputs = self(**kwargs)
+        with torch.no_grad():
+            outputs = self(**kwargs)
         gen_result = torch.argmax(outputs.logits, dim=-1)
         return gen_result
 

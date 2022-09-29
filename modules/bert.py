@@ -121,9 +121,13 @@ class MyBertLMHeadModel(BertPreTrainedModel):
         if not self.training:
             attention_mask = torch.ones((input_ids.shape[0], gen_until_length), device=input_ids.device)
 
+        # inputs_embeds = self.bert.embeddings.word_embeddings(d_input_ids)
+        # gen_hiddens = [inputs_embeds]
+        torch.cuda.empty_cache()
         while cur_len <= gen_until_length:
             outputs = self.bert(
                 d_input_ids,
+                # input_ids=None,
                 attention_mask=attention_mask[:,:cur_len],
                 token_type_ids=token_type_ids,
                 position_ids=position_ids,
@@ -133,18 +137,23 @@ class MyBertLMHeadModel(BertPreTrainedModel):
                 encoder_attention_mask=encoder_attention_mask,
                 past_key_values=past_key_values,
                 use_cache=True,
+                # use_cache=False,
                 output_attentions=output_attentions,
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict,
             )
             d_input_ids=None
             past_key_values=outputs.past_key_values
+            # inputs_embeds=outputs.last_hidden_state[:, -1:, :]
             inputs_embeds=outputs.last_hidden_state
             gen_hiddens.append(inputs_embeds)
+            # inputs_embeds = torch.concat(gen_hiddens, dim=1)
             cur_len += 1
+        # torch.cuda.empty_cache()
 
         # sequence_output = outputs[0]
         sequence_output = torch.concat(gen_hiddens, dim=1)
+        # sequence_output = outputs.last_hidden_state
         prediction_scores = self.cls(sequence_output)
 
         lm_loss = None

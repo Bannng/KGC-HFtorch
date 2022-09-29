@@ -2,10 +2,11 @@
 
 ### My implementation 
 - package list
+* conda create -n kgc-torch python==3.8
 * conda install pytorch cudatoolkit=11.3 -c pytorch
-* pip install transformers
-* pip install parlai
-* pip install colorlog
+* pip install transformers (4.22.2)
+* pip install parlai (1.7.1)
+* pip install colorlog (6.7.0)
 * pip install git+https://github.com/bckim92/language-evaluation.git
 
 
