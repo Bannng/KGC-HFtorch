@@ -411,7 +411,7 @@ class BoBTMemNetBert2(KnowledgeEncoderDecoderModel):
             gen_result = torch.argmax(decoder_outputs.logits, dim=-1)
             # make decoder attention mask based on eos_token_id
             eos_tokens = [np.where(g==self.tokenizer.sep_token_id)[0] for g in gen_result.cpu().numpy()]
-            eos_tokens = [et.item() if len(et) != 0 else gen_result.shape[-1] for et in eos_tokens]
+            eos_tokens = [et[0].item() if len(et) != 0 else gen_result.shape[-1] for et in eos_tokens]
             eos_tokens = torch.tensor(eos_tokens).unsqueeze(-1).repeat(1, gen_result.shape[-1])
             range_tokens = torch.arange(gen_result.shape[-1]).repeat(gen_result.shape[0], 1)
             decoder_attention_mask = (range_tokens < eos_tokens).type(torch.DoubleTensor).to(decoder_output_sequence.device)

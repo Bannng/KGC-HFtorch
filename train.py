@@ -13,9 +13,9 @@ from models.MemBoB import MemNetBoB, BoBTMemNetBert
 from models.MemBoB2 import BoBTMemNetBert2
 
 
-import os
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+# import os
+# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 
 def get_args():
@@ -58,7 +58,7 @@ def get_args():
     parser.add_argument("--warmup_ratio", type=float, default=0.0)
     parser.add_argument("--max_grad_norm", type=float, default=0.4)
     parser.add_argument("--logging_num_per_epoch", type=int, default=20)
-    parser.add_argument("--save_num_per_epoch", type=int, default=10)
+    parser.add_argument("--save_num_per_epoch", type=int, default=1000)
     parser.add_argument("--disable_tqdm", action='store_true')
     parser.add_argument("--dataloader_num_workers", type=int, default=0)
     
