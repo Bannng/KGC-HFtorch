@@ -190,12 +190,12 @@ class MemNetBoB(KnowledgeEncoderDecoderModel):
         # loss aggregation step
         total_loss = None
         token_loss = torch.zeros(1)
-        know_loss = knowledge_loss.detach()
+        know_loss = knowledge_loss.detach().clone()
         correct_know_num = correct_know_num
         
         if loss is not None:
             total_loss = loss
-            token_loss = loss.detach()
+            token_loss = loss.detach().clone()
 
         if total_loss is not None and knowledge_loss is not None:
             total_loss += self.knowledge_alpha * knowledge_loss
@@ -449,12 +449,12 @@ class BoBTMemNetBert(KnowledgeEncoderDecoderModel):
         # loss aggregation step
         total_loss = None
         token_loss = torch.zeros(1)
-        know_loss = knowledge_loss.detach()
+        know_loss = knowledge_loss.detach().clone()
         correct_know_num = correct_know_num
         
         if loss is not None:
             total_loss = loss
-            token_loss = loss.detach()
+            token_loss = loss.detach().clone()
 
         if total_loss is not None and knowledge_loss is not None:
             total_loss += self.knowledge_alpha * knowledge_loss

@@ -11,6 +11,7 @@ from models.TMemNet import TMemNet, TMemNetBert
 from models.TitleNet import TitleNet
 from models.MemBoB import MemNetBoB, BoBTMemNetBert
 from models.MemBoB2 import BoBTMemNetBert2
+from models.PostKS import PostKSBert
 
 
 # import os
@@ -46,7 +47,7 @@ def get_args():
     parser.add_argument("--max_title_num", type=int, default=5)
 
     # arguments for training
-    parser.add_argument("--output_dir", type=str, default='/home/byeongjoo/KGC/SequentialKnowledgeTransformer-torch/output/wowtest5')
+    parser.add_argument("--output_dir", type=str, default='/home/byeongjoo/works/KGC-torch/output')
     parser.add_argument("--num_train_epochs", type=int, default=20)
     parser.add_argument("--per_device_train_batch_size", type=int, default=1)
     parser.add_argument("--per_device_eval_batch_size", type=int, default=1)
@@ -58,7 +59,7 @@ def get_args():
     parser.add_argument("--warmup_ratio", type=float, default=0.0)
     parser.add_argument("--max_grad_norm", type=float, default=0.4)
     parser.add_argument("--logging_num_per_epoch", type=int, default=20)
-    parser.add_argument("--save_num_per_epoch", type=int, default=1000)
+    parser.add_argument("--save_num_per_epoch", type=int, default=100000)
     parser.add_argument("--disable_tqdm", action='store_true')
     parser.add_argument("--dataloader_num_workers", type=int, default=0)
     
@@ -103,10 +104,11 @@ def select_model(args):
             max_title_num=args.max_title_num,
         )
 
-
-
     elif model_type == "PostKSBert":
-        raise ValueError("choose your model type properly")
+        model = PostKSBert(
+            use_cs_ids=args.use_cs_ids,
+            knowledge_alpha=args.knowledge_alpha,
+        )
 
     elif model_type == "SKT":
         raise ValueError("choose your model type properly")
@@ -129,7 +131,8 @@ def train(args):
     # model = select_model(args)
     # model = MemNetBoB(knowledge_mode="2")
     # model = BoBTMemNetBert(knowledge_mode="context_only", concat_query=False) # context_only, argmax, pool
-    model = BoBTMemNetBert2(knowledge_mode="argmax", concat_query=True) # context_only, argmax, pool
+    # model = BoBTMemNetBert2(knowledge_mode="argmax", concat_query=True) # context_only, argmax, pool
+    model = PostKSBert()
     # 일단 argmax는 나중에 실험
 
     
