@@ -19,7 +19,8 @@ class PostKSBert(KnowledgeEncoderDecoderModel):
     def __init__(self,
         encoder_config='bert-base-uncased',
         use_cs_ids=False,
-        knowledge_alpha=0.25
+        knowledge_alpha=0.25,
+        detach_posterior=True,        
     ):
 
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -27,6 +28,7 @@ class PostKSBert(KnowledgeEncoderDecoderModel):
             self.tokenizer,
             use_cs_ids=use_cs_ids,
             knowledge_alpha=knowledge_alpha,
+            detach_posterior=detach_posterior,
         )
         self.encoder_config_ = knowledge_encoder.config
 
